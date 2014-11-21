@@ -1,36 +1,43 @@
 package com.patternrecognition.preprocessing;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
-import java.util.TreeMap;
-import java.util.Map.Entry;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
+import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
-import org.opencv.highgui.Highgui;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.utils.Converters;
+
+//import com.sun.java.util.jar.pack.Package.Class/*??*/
 
 /**
  * Servlet implementation class Preprocessing
  */
 @WebServlet("/PreprocessingPath")
+@MultipartConfig
 public class Preprocessing extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
@@ -38,285 +45,136 @@ public class Preprocessing extends HttpServlet {
 	public Preprocessing() {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	}
+	
+	   /**
+     * @see HttpServlet#service(HttpServletRequest request, HttpServletResponse response)
+     */
+    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    	
+    	String method = request.getMethod();
+    	
+        doGet(request, response);
+    }
 
+    public static long copy(InputStream input, OutputStream output) throws IOException {
+        byte[] buffer = new byte[4096];
+
+        long count = 0L;
+        int n = 0;
+
+        while (-1 != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+            count += n;
+        }
+        return count;
+    }
+     
+    
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		System.out.println("Hi from GET");
-		
-		PrintWriter writer = response.getWriter();
-		writer.println("Le lo shuvare");
-		
-		
-		
-		PreProcessingTest.startPreprocessing();
-	}
-	
-	public static void startPreprocessing() {
-		
-	  	String img = "card.png";
-//	  	String perspective_transform_file = excludeDotJpg +"_prespective.png";
-//	  	String ROI_file = excludeDotJpg +"_roi.png";
-//	  	String binary_roi_file = excludeDotJpg +"_binary_roi.png";
-		
-		Mat result = smooth(img);
-		Highgui.imwrite("img_perspective.png", result);
-		
-		 Mat img_grayROI =  Highgui.imread("img_perspective.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE);
-//		  Highgui.imwrite("img_grayROI.png", img_grayROI);
-//		  Mat img_gray2 = img_gray;
-		  
-		  Imgproc.GaussianBlur(img_grayROI, img_grayROI, new Size(15,15),50.00);
-//		  Highgui.imwrite("img_blur.png", img_grayROI);
-//		  
-//		  Imgproc.adaptiveThreshold(img_grayROI, img_grayROI, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY_INV, 15, 4);
-//		  Highgui.imwrite("img_threshold.png", img_grayROI);
-		  
-		  Imgproc.threshold(img_grayROI, img_grayROI, -1, 255, Imgproc.THRESH_BINARY_INV+Imgproc.THRESH_OTSU);
-//		  Highgui.imwrite("img_threshold2ROI.png", img_grayROI);
-//		  
-//		  Imgproc.Canny(img_grayROI, img_grayROI, 80, 100);
-//		  Highgui.imwrite("img_cannyROI.png", img_grayROI);
-		  
-//		  Imgproc.erode(img_grayROI, img_grayROI, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(2,2)));        
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+    	
+    	// get current date time with Date()
+    	DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");			    
+	    Date date = new Date();
+	    String timestamp = dateFormat.format(date);
+	    
+	   
+	    // set the filename
+		String filename = "IMAGE_" + timestamp+".png";
 
-		  Imgproc.dilate(img_grayROI, img_grayROI, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(2, 2)));
-		  
-		  Mat heirarchy= new Mat();
-          Point shift=new Point(150,0);
-		  
-		  List<MatOfPoint> contours = new ArrayList<MatOfPoint>();    
-
-	        Imgproc.findContours(img_grayROI, contours, heirarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-	        double[] cont_area =new double[contours.size()]; 
-	        
-		  for(int i=0; i< contours.size();i++){
-	        	 if (Imgproc.contourArea(contours.get(i)) > 50 ){
-	                 Rect rect = Imgproc.boundingRect(contours.get(i));
-	                 cont_area[i]=Imgproc.contourArea(contours.get(i));
-	                 
-	                 if (rect.height > 25){
-	                     Core.rectangle(result, new Point(rect.x,rect.y), new Point(rect.x+rect.width,rect.y+rect.height),new Scalar(0,0,255));
-//	                     Imgproc.drawContours(img_grayROI, contours, i, new Scalar(0,0,0),-1,8,heirarchy,2,shift);
-//	                     Core.rectangle(img_grayROI, new Point(rect.x,rect.y), new Point(rect.x+rect.width,rect.y+rect.height),new Scalar(0,0,255));
-	                     
-//	                     Mat ROI = img_grayROI.submat(rect.y, rect.y + rect.height, rect.x, rect.x + rect.width);
-
-	                     System.out.println(rect.x +"-"+ rect.y +"-"+ rect.height+"-"+rect.width);
-	                     
-//	                     Highgui.imwrite("final.png",img_grayROI);
-	                 }
-	             }
-	        }
-		  Highgui.imwrite("img_roi_file.png",result);		  
-		  
-		  Mat img_binarized =  Highgui.imread("img_roi_file.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE);
-		  
-		  Imgproc.threshold(img_binarized, img_binarized, -1, 255, Imgproc.THRESH_BINARY_INV+Imgproc.THRESH_OTSU);
-		  
-		  Highgui.imwrite("binary_roi_file.png", img_binarized);
-	}
-	
-	public static Mat warp(Mat inputMat,Mat startM) {
-        int resultWidth = 1000;
-        int resultHeight = 1000;
+       // InputStream in = request.getInputStream();
+        InputStream in = request.getPart("uploaded_file").getInputStream();
+        OutputStream out = new FileOutputStream("C:/Users/NAPSTER/ADT/ImagePreprocessing/"+filename);
+        copy(in, out); 
+        System.out.println("File Saved");
+        out.flush();
+        out.close();
         
-//        Imgproc.equalizeHist(inputMat, inputMat);
+        String preprocessedFile =  PreProcessingTest.startPreprocessing(filename);
+       
+//        System.out.println(request.getServletContext().getRealPath("/"));
+//        System.out.println(request.getServletContext().getResourceAsStream("/WEB-INF/lib/test"));
+//        List<String> classNames=new ArrayList<String>();
+        
+        readJar(request.getServletContext().getRealPath("/")+"\\WEB-INF\\lib\\");
 
-        Mat outputMat = new Mat(resultWidth, resultHeight, CvType.CV_32FC2);
+       String result = test.extractText(preprocessedFile);    
+       
+       PrintWriter writer = response.getWriter();
+       writer.print(result);
         
-        Point ocvPOut1 = new Point(0, 0);
-        Point ocvPOut2 = new Point(0, resultHeight);
-        Point ocvPOut3 = new Point(resultWidth, resultHeight);
-        Point ocvPOut4 = new Point(resultWidth, 0);
-        
-        System.out.println(ocvPOut1 +"-"+ ocvPOut2 +"-"+ ocvPOut3+"-"+ocvPOut4);
-        
-        List<Point> dest = new ArrayList<Point>();
-        dest.add(ocvPOut1);
-        dest.add(ocvPOut2);
-        dest.add(ocvPOut3);
-        dest.add(ocvPOut4);
-        Mat endM = Converters.vector_Point2f_to_Mat(dest);      
-
-        Mat perspectiveTransform = Imgproc.getPerspectiveTransform(startM, endM);
-
-        Imgproc.warpPerspective(inputMat, 
-                                outputMat,
-                                perspectiveTransform,
-                                new Size(resultWidth, resultHeight), 
-                                Imgproc.INTER_CUBIC);
-        
-        return outputMat;
     }
-	
-	static {
-		 System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-	}
-	
-//	static {
-//	    if (!OpenCVLoader.initDebug()) {
-//	        // Handle initialization error
-//	    	System.out.println("Initialization error");
-//	    }
-//	}
+    
+    public static void addPath(String s) throws Exception {
+        File f = new File(s);
+        URL u = f.toURL();
+        URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+        Class urlClass = URLClassLoader.class;
+        java.lang.reflect.Method method = urlClass.getDeclaredMethod("addURL", new Class[]{URL.class});
+        method.setAccessible(true);
+        method.invoke(urlClassLoader, new Object[]{u});
+    }
+    static{
+       /* System.loadLibrary("liblept168");
+        System.loadLibrary("libtesseract302");*/
+    }
+    
+    private static void process(InputStream input,  String path, String dllName) throws IOException {
 
-	 public static Mat smooth(String filename) { 
-		 
-		 System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-		 		 
-//		  	String excludeDotJpg = filename.split("\\.")[0];
-//		  	String gray_file = excludeDotJpg +"gray.png";
-//		  	String threshold_file = excludeDotJpg +"threshold.png";
-//		  	String canny_file = excludeDotJpg +"canny.png";
-		  	
-//		  	Mat img = Highgui.imread(filename, Highgui.CV_LOAD_IMAGE_COLOR);
-		  	
-//		  Bitmap b = BitmapFactory.decodeByteArray(filename.getBytes(), 0, filename.getBytes().length);
-		  Mat img_gray =  Highgui.imread(filename, Highgui.CV_LOAD_IMAGE_GRAYSCALE);
-		  Highgui.imwrite("gray_file.png", img_gray);
-//		  Mat img_gray2 = img_gray;
-		  
-		  Imgproc.threshold(img_gray, img_gray, -1, 255, Imgproc.THRESH_BINARY_INV+Imgproc.THRESH_OTSU);
-		  Highgui.imwrite("threshold_file.png", img_gray);
-		  
-		  Imgproc.Canny(img_gray, img_gray, 80, 100);
-		  Highgui.imwrite("canny_file.png", img_gray);
-		  
-//		  Imgproc.GaussianBlur(img, img, new Size(15,15),50.00);
-//		  Highgui.imwrite("img_blur.png", img);
-		  
-//		  Imgproc.adaptiveThreshold(img, img, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY_INV, 15, 4);
-//		  Highgui.imwrite("img_threshold.png", img);
-		  
-		 
-		  
-		  List<MatOfPoint> contours = new ArrayList<MatOfPoint>();    
+    	int size = 2048;
 
-	        Imgproc.findContours(img_gray, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-	       
-	        double maxArea = -1;
-	        int maxAreaIdx = -1;
-	        MatOfPoint temp_contour = contours.get(0); //the largest is at the index 0 for starting point
-	        MatOfPoint2f approxCurve = new MatOfPoint2f();
-	        MatOfPoint largest_contour = contours.get(0);
-	        //largest_contour.ge
-	        List<MatOfPoint> largest_contours = new ArrayList<MatOfPoint>();
-	        //Imgproc.drawContours(imgSource,contours, -1, new Scalar(0, 255, 0), 1);
+    	BufferedInputStream reader = new BufferedInputStream(input);
 
-	        for (int idx = 0; idx < contours.size(); idx++) {
-	            temp_contour = contours.get(idx);
-	            double contourarea = Imgproc.contourArea(temp_contour);
-	            //compare this contour to the previous largest contour found
-	            if (contourarea > maxArea) {
-	                //check if this contour is a square
-	                MatOfPoint2f new_mat = new MatOfPoint2f( temp_contour.toArray() );
-	                int contourSize = (int)temp_contour.total();
-	                MatOfPoint2f approxCurve_temp = new MatOfPoint2f();
-	                Imgproc.approxPolyDP(new_mat, approxCurve_temp, contourSize*0.05, true);
-	                if (approxCurve_temp.total() == 4) {
-	                    maxArea = contourarea;
-	                    maxAreaIdx = idx;
-	                    approxCurve=approxCurve_temp;
-	                    largest_contour = temp_contour;
-	                }
-	            }
-	        }
+    	FileOutputStream fos = new FileOutputStream(new File(path+dllName));
 
-	       Imgproc.cvtColor(img_gray, img_gray, Imgproc.COLOR_BayerBG2RGB);
-	       Mat sourceImage =Highgui.imread(filename);
-	       double[] temp_double;
-	       temp_double = approxCurve.get(0,0);       
-	       Point p1 = new Point(temp_double[0], temp_double[1]);
-	       
-	       //Core.circle(imgSource,p1,55,new Scalar(0,0,255));
-	       //Imgproc.warpAffine(sourceImage, dummy, rotImage,sourceImage.size());
-	       temp_double = approxCurve.get(1,0);       
-	       Point p2 = new Point(temp_double[0], temp_double[1]);	       
-	       
-	      // Core.circle(imgSource,p2,150,new Scalar(255,255,255));
-	       temp_double = approxCurve.get(2,0);       
-	       Point p3 = new Point(temp_double[0], temp_double[1]);
-	       //Core.circle(imgSource,p3,200,new Scalar(255,0,0));
-	       temp_double = approxCurve.get(3,0);       
-	       Point p4 = new Point(temp_double[0], temp_double[1]);
-	      // Core.circle(imgSource,p4,100,new Scalar(0,0,255));
-	       
-	       // rearranging the points - BL, TL, TR, BR
-	       TreeMap<Double, String> sortX = new TreeMap<Double, String>();
-	       TreeMap<Double, Double> sortY = new TreeMap<Double, Double>(Collections.reverseOrder());
-	       
-	       sortX.put(p1.x, "p1");
-	       sortX.put(p2.x, "p2");
-	       sortX.put(p3.x, "p3");
-	       sortX.put(p4.x, "p4");
-	       
-	       sortY.put(p1.y, p1.x);
-	       sortY.put(p2.y, p2.x);
-	       sortY.put(p3.y, p3.x);
-	       sortY.put(p4.y, p4.x);
-	       
-	       Point points[]=new Point[4];
-	       int i=0;
-	       for (Entry<Double, Double> entry : sortY.entrySet()){
-	    	    Double keyY = entry.getKey();
-	    	    Double valueX = entry.getValue();
-	    	    points[i]=new Point(valueX,keyY);
-	    	    System.out.println(valueX+"-"+keyY);
-	    	    i++;
-	    	}
-	       
-	       Point topLeft;
-	       Point topRight;
-	       if(points[0].x < points[1].x)
-	       {
-	    	   topLeft=new Point(points[0].x,points[0].y);
-	    	   topRight=new Point(points[1].x,points[1].y);
-	       }
-	       else
-	       {
-	    	   topLeft=new Point(points[1].x,points[1].y);
-	    	   topRight=new Point(points[0].x,points[0].y);
-	       }
-	       
-	       Point bottomLeft;
-	       Point bottomRight;
-	       
-	       if(points[2].x < points[3].x)
-	       {
-	    	   bottomLeft=new Point(points[2].x,points[2].y);
-	    	   bottomRight=new Point(points[3].x,points[3].y);
-	       }
-	       else
-	       {
-	    	   bottomLeft=new Point(points[3].x,points[3].y);
-	    	   bottomRight=new Point(points[2].x,points[2].y);
-	       }
-	       
-	       System.out.println("Bottom Left P1:"+bottomLeft.x+" "+bottomLeft.y);
-	       System.out.println("Top Left P2:"+topLeft.x+" "+topLeft.y);
-	       System.out.println("Top Right P3:"+topRight.x+" "+topRight.y);
-	       System.out.println("Bottom Right P4:"+bottomRight.x+" "+bottomRight.y);
-	    	   
-   
-	       List<Point> source = new ArrayList<Point>();
-	       source.add(bottomLeft);
-	       source.add(topLeft);
-	       source.add(topRight);
-	       source.add(bottomRight);
-//	       source.add(p1);
-//	       source.add(p2);
-//	       source.add(p3);
-//	       source.add(p4);
-	       
-	       Mat startM = Converters.vector_Point2f_to_Mat(source);
-	       Mat result=warp(sourceImage,startM);
-	       return result;
-  
-	        
-	 }
+    	BufferedOutputStream bs = new BufferedOutputStream(fos,2048);
 
+    	byte readContent[] = new byte[size];
+
+    	int count = 0;
+
+    	while ((count = input.read(readContent, 0, size) )!= -1) {
+
+    	bs.write(readContent,0,count);
+
+    	}
+
+    	bs.flush();
+
+    	bs.close();
+
+    	reader.close();
+    	
+    	System.load(path+dllName);
+
+    	}
+
+    	public static void readJar(String path) throws IOException {
+    	System.out.println(path);
+    	JarFile jarFile = new JarFile(path+"useless.jar");
+
+    	final Enumeration<JarEntry> entries = jarFile.entries();
+
+    	while (entries.hasMoreElements()) {
+
+    	JarEntry entry = entries.nextElement();
+
+    	if (entry.getName().contains(".dll")) {
+    		System.out.println(System.getProperty("os.arch"));
+    	System.out.println("File : " + entry.getName());
+
+    	InputStream input = jarFile.getInputStream(entry);
+
+    	process(input,path, entry.getName());
+
+    	}
+
+    	}
+
+    	}
 }
 
 

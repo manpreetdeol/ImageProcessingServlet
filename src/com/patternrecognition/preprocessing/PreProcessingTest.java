@@ -22,22 +22,28 @@ import org.opencv.utils.Converters;
 public class PreProcessingTest {
 	
 //	static String imageFile = "card2.png";
+	
+	static String filePath = "C:/Users/NAPSTER/ADT/ImagePreprocessing/";
 
-	public static void startPreprocessing() {
+	public static String startPreprocessing(String filename) {
 		
-	  	String img = "C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/card.png";
+//	  	String img = filename;
 //	  	String perspective_transform_file = excludeDotJpg +"_prespective.png";
 //	  	String ROI_file = excludeDotJpg +"_roi.png";
 //	  	String binary_roi_file = excludeDotJpg +"_binary_roi.png";
+//		filename = filePath+"internet.png";
 		
-		Mat result = smooth(img);
-		Highgui.imwrite("C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/img_perspective.png", result);
+		Mat result = smooth(filename);
+//		Highgui.imwrite("C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/img_perspective.png", result);
+//		Imgproc.equalizeHist(result, result);
+//		  Highgui.imwrite(filePath + "contrast.png", img_gray);
+		Highgui.imwrite(filePath + "img_perspective.png", result);
 		
-		 Mat img_grayROI =  Highgui.imread("C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/img_perspective.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE);
+		 Mat img_grayROI =  Highgui.imread(filePath + "img_perspective.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE);
 //		  Highgui.imwrite("img_grayROI.png", img_grayROI);
 //		  Mat img_gray2 = img_gray;
 		  
-		  Imgproc.GaussianBlur(img_grayROI, img_grayROI, new Size(15,15),50.00);
+//		  Imgproc.GaussianBlur(img_grayROI, img_grayROI, new Size(15,15),50.00);
 //		  Highgui.imwrite("img_blur.png", img_grayROI);
 //		  
 //		  Imgproc.adaptiveThreshold(img_grayROI, img_grayROI, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY_INV, 15, 4);
@@ -79,13 +85,21 @@ public class PreProcessingTest {
 	                 }
 	             }
 	        }
-		  Highgui.imwrite("C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/img_roi_file.png",result);		  
+//		  Highgui.imwrite("C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/img_roi_file.png",result);
+		  Highgui.imwrite(filePath + "img_roi_file.png",result);
 		  
-		  Mat img_binarized =  Highgui.imread("img_roi_file.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE);
+		  Mat img_binarized =  Highgui.imread(filePath + "img_roi_file.png", Highgui.CV_LOAD_IMAGE_GRAYSCALE);
+		  
+//		  Imgproc.equalizeHist(img_binarized, img_binarized);
+//		  Highgui.imwrite(filePath + "contrast.png", img_gray);
 		  
 		  Imgproc.threshold(img_binarized, img_binarized, -1, 255, Imgproc.THRESH_BINARY_INV+Imgproc.THRESH_OTSU);
 		  
-		  Highgui.imwrite("C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/binary_roi_file.png", img_binarized);
+//		  Highgui.imwrite("C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/binary_roi_file.png", img_binarized);
+		  String prespective_file = "img_perspective.png";
+		  Highgui.imwrite(filePath +"binary_roi_file.png", img_binarized);
+		  
+		  return prespective_file;
 	}	
 	
 	public static Mat warp(Mat inputMat,Mat startM) {
@@ -142,21 +156,26 @@ public class PreProcessingTest {
 //		  	Mat img = Highgui.imread(filename, Highgui.CV_LOAD_IMAGE_COLOR);
 		  	
 //		  Bitmap b = BitmapFactory.decodeByteArray(filename.getBytes(), 0, filename.getBytes().length);
-		  Mat img_gray =  Highgui.imread(filename, Highgui.CV_LOAD_IMAGE_GRAYSCALE);
-		  Highgui.imwrite("C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/gray_file.png", img_gray);
+		  Mat img_gray =  Highgui.imread(filePath + filename, Highgui.CV_LOAD_IMAGE_GRAYSCALE);
+//		  Highgui.imwrite("C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/gray_file.png", img_gray);
+		  Highgui.imwrite(filePath + "gray_file.png", img_gray);
 //		  Mat img_gray2 = img_gray;
 		  
 		  Imgproc.threshold(img_gray, img_gray, -1, 255, Imgproc.THRESH_BINARY_INV+Imgproc.THRESH_OTSU);
-		  Highgui.imwrite("C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/threshold_file.png", img_gray);
+//		  Highgui.imwrite("C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/threshold_file.png", img_gray);
+		  Highgui.imwrite(filePath + "threshold_file.png", img_gray);
 		  
 		  Imgproc.Canny(img_gray, img_gray, 80, 100);
-		  Highgui.imwrite("C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/canny_file.png", img_gray);
+//		  Highgui.imwrite("C:/Users/NAPSTER/ADT/ImagePreprocessing/WebContent/WEB-INF/canny_file.png", img_gray);
+		  Highgui.imwrite(filePath + "canny_file.png", img_gray);
 		  
-//		  Imgproc.GaussianBlur(img, img, new Size(15,15),50.00);
-//		  Highgui.imwrite("img_blur.png", img);
+//		  Imgproc.equalizeHist(img_gray, img_gray);
+//		  Highgui.imwrite(filePath + "contrast.png", img_gray);
+//		  Imgproc.GaussianBlur(img_gray, img_gray, new Size(15,15),50.00);
+//		  Highgui.imwrite("img_blur.png", img_gray);
 		  
-//		  Imgproc.adaptiveThreshold(img, img, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY_INV, 15, 4);
-//		  Highgui.imwrite("img_threshold.png", img);
+//		  Imgproc.adaptiveThreshold(img_gray, img_gray, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY_INV, 15, 4);
+//		  Highgui.imwrite("img_threshold.png", img_gray);
 		  
 		 
 		  
@@ -176,6 +195,8 @@ public class PreProcessingTest {
 	        for (int idx = 0; idx < contours.size(); idx++) {
 	            temp_contour = contours.get(idx);
 	            double contourarea = Imgproc.contourArea(temp_contour);
+	            Rect rect = Imgproc.boundingRect(contours.get(idx));
+//                cont_area[i]=Imgproc.contourArea(contours.get(i));
 	            //compare this contour to the previous largest contour found
 	            if (contourarea > maxArea) {
 	                //check if this contour is a square
@@ -187,13 +208,16 @@ public class PreProcessingTest {
 	                    maxArea = contourarea;
 	                    maxAreaIdx = idx;
 	                    approxCurve=approxCurve_temp;
+	                    Core.rectangle(img_gray, new Point(rect.x,rect.y), new Point(rect.x+rect.width,rect.y+rect.height),new Scalar(0,0,255));
 	                    largest_contour = temp_contour;
 	                }
 	            }
 	        }
+	        
+	        Highgui.imwrite("img_marked_points.png", img_gray);
 
 	       Imgproc.cvtColor(img_gray, img_gray, Imgproc.COLOR_BayerBG2RGB);
-	       Mat sourceImage =Highgui.imread(filename);
+	       Mat sourceImage =Highgui.imread(filePath + filename);
 	       double[] temp_double;
 	       temp_double = approxCurve.get(0,0);       
 	       Point p1 = new Point(temp_double[0], temp_double[1]);
@@ -215,15 +239,45 @@ public class PreProcessingTest {
 	       TreeMap<Double, String> sortX = new TreeMap<Double, String>();
 	       TreeMap<Double, Double> sortY = new TreeMap<Double, Double>(Collections.reverseOrder());
 	       
+	       
 	       sortX.put(p1.x, "p1");
 	       sortX.put(p2.x, "p2");
 	       sortX.put(p3.x, "p3");
 	       sortX.put(p4.x, "p4");
 	       
-	       sortY.put(p1.y, p1.x);
-	       sortY.put(p2.y, p2.x);
-	       sortY.put(p3.y, p3.x);
-	       sortY.put(p4.y, p4.x);
+	       if(sortY.containsKey(p1.y)){
+	    	   p1.y = p1.y + 1;
+	    	   sortY.put(p1.y, p1.x);
+	       }
+	       else {
+	    	   sortY.put(p1.y, p1.x);
+	       }
+	       if(sortY.containsKey(p2.y)){
+	    	   p2.y = p2.y + 1;
+	    	   sortY.put(p2.y, p2.x);
+	       }
+	       else {
+	    	   sortY.put(p2.y, p2.x);
+	       }
+	       if(sortY.containsKey(p3.y)){
+	    	   p3.y = p3.y + 1;
+	    	   sortY.put(p3.y, p3.x);
+	       }
+	       else {
+	    	   sortY.put(p3.y, p3.x);
+	       }
+	       if(sortY.containsKey(p4.y)){
+	    	   p4.y = p4.y + 1;
+	    	   sortY.put(p4.y, p4.x);
+	       }
+	       else {
+	    	   sortY.put(p4.y, p4.x);
+	       }
+	       
+//	       sortY.put(p1.y, p1.x);
+//	       sortY.put(p2.y, p2.x);
+//	       sortY.put(p3.y, p3.x);
+//	       sortY.put(p4.y, p4.x);
 	       
 	       Point points[]=new Point[4];
 	       int i=0;
